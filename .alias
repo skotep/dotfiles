@@ -1,0 +1,5 @@
+alias sa='source $HOME/.alias'
+alias j='jobs -l'
+alias h='history'
+alias df='df -h'
+alias du='du -h'
