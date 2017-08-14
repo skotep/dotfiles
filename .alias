@@ -1,5 +1,9 @@
 alias sa='source $HOME/.alias'
-alias ls='ls -F --color=auto'
+if [ "$(uname)" == "Darwin" ]; then
+  alias ls='ls -GF'
+else
+  alias ls='ls -F --color=auto'
+fi
 alias j='jobs -l'
 alias h='history'
 alias df='df -h'
