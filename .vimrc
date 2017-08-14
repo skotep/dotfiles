@@ -13,6 +13,8 @@
 " Enable modern Vim features not compatible with Vi spec.
 set nocompatible
 
+if !empty(glob("/usr/share/vim/google/google.vim"))
+
 " Use the 'google' package by default (see http://go/vim/packages).
 source /usr/share/vim/google/google.vim
 
@@ -74,6 +76,8 @@ Glug youcompleteme-google
 " Note: this requires installing the upstream ultisnips plugin from
 " https://github.com/SirVer/ultisnips.
 "Glug ultisnips-google
+"
+endif
 
 " All of your plugins must be added before the following line.
 

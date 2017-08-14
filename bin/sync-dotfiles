@@ -1,0 +1,4 @@
+#!/bin/bash
+cd $HOME/dotfiles
+git pull
+rsync -auv . --exclude .git --exclude LICENSE $HOME/

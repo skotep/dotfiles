@@ -1,4 +1,5 @@
 alias sa='source $HOME/.alias'
+alias ls='ls -F --color=auto'
 alias j='jobs -l'
 alias h='history'
 alias df='df -h'
