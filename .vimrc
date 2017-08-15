@@ -154,6 +154,6 @@ set shiftwidth=4
 set hlsearch
 nnoremap <s-k> <CR>
 
-"let mapleader=','
+"let mapleader=';'
 "
 

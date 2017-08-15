@@ -12,6 +12,9 @@ alias du='du -h'
 alias ij='/opt/intellij-ue-stable/bin/idea.sh'
 alias work='ssh skotep.svl.corp.google.com'
 alias grpe='grep'
+alias v='view'
+
+alias gc="cd /google/src/cloud/skotep/catan/google3/platforms/capacity/intent/catan"
 
 function vf() {
 	src=$2
@@ -24,4 +27,16 @@ function vf() {
             vi $FILENAME
         done
     fi
+}
+
+function gig() {
+	filelist=$(g4 p -s relativepath | grep \.go | awk '{print $1}')
+	for file in $filelist; do
+	    echo "goimports $file"
+		goimports -w $file
+	done
+	for filedir in $(echo $filelist | xargs dirname | sort -u); do
+	    echo "glaze $filedir"
+		glaze $filedir
+	done
 }
