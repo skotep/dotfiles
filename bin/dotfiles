@@ -1,0 +1,7 @@
+#!/bin/bash
+cd $HOME/dotfiles
+git pull
+rsync -auv . --exclude .git --exclude LICENSE $HOME/
+find . -type f | grep -v \.git | (cd $HOME ; tar -cf - -T -) | tar -xf -
+git commit -m 'update' -a
+git push

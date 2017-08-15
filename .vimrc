@@ -148,6 +148,9 @@ filetype plugin indent on
 syntax on
 set number
 set list listchars=tab:»\ ,trail:°
+set tabstop=4
+set shiftwidth=4
+"set expandtab
 set hlsearch
 nnoremap <s-k> <CR>
 
