@@ -5,3 +5,4 @@ rsync -auv . --exclude .git --exclude LICENSE $HOME/
 find . -type f | grep -v \.git | (cd $HOME ; tar -cf - -T -) | tar -xf -
 git status
 git commit -m 'update' -a
+if [ "$1"x != "x" ]; then git push ; fi
