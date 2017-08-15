@@ -14,7 +14,9 @@ alias work='ssh skotep.svl.corp.google.com'
 alias grpe='grep'
 
 function vf() {
-    FILES=($(find . | grep $1))
+	src=$2
+	if [ -z "${src}" ]; then src="."; fi
+    FILES=($(find "${src}" | grep $1))
     if [ "${#FILES[@]}" == 1 ]; then 
         vi ${FILES[0]}
     else
