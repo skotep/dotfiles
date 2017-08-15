@@ -1,5 +1,5 @@
 PS1='\[\033[1;36m\]\w>\n\D{%F %T} \[\033[01;31m\]\h\[\033[01;36m\] \[\033[01;32m\][\!] \[\033[00m\]'
 export PATH="$HOME/bin:$PATH"
-export GREP_OPTIONS='--color=always --exclude=*.pyc --exclude-dir=.git'
+export GREP_OPTIONS='-E --color=always --exclude=*.pyc --exclude-dir=.git'
 . $HOME/.alias
 set -o vi

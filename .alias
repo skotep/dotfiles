@@ -11,6 +11,7 @@ alias df='df -h'
 alias du='du -h'
 alias ij='/opt/intellij-ue-stable/bin/idea.sh'
 alias work='ssh skotep.svl.corp.google.com'
+alias grpe='grep'
 
 function vf() {
     FILES=($(find . | grep $1))
