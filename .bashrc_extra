@@ -3,3 +3,4 @@ export PATH="$HOME/bin:$PATH"
 export GREP_OPTIONS='-REn --color=always --exclude=*.pyc --exclude-dir=.git'
 . $HOME/.alias
 set -o vi
+export P4DIFF='git diff --no-index'
