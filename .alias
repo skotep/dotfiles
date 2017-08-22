@@ -2,7 +2,7 @@ alias sa='source $HOME/.alias'
 if [ "$(uname)" == "Darwin" ]; then
   alias ls='ls -GF'
 else
-  alias ls='ls -F --color=auto'
+  alias ls='ls -F --color=always'
 fi
 alias j='jobs -l'
 alias less='less -R'
