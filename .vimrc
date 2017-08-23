@@ -1,5 +1,5 @@
 set nocompatible
-filetype off
+"filetype off
 " set the runtime path to include Vundle and initialize
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
@@ -10,10 +10,10 @@ Plugin 'leafgarland/typescript-vim'  " enables TypeScript syntax-highlighting.
 call vundle#end()
 
 " TypeScript plugin setup
-let g:tsuquyomi_use_dev_node_module = 2
-let g:tsuquyomi_tsserver_path = '/google/src/head/depot/google3/third_party/javascript/node_modules/typescript/stable/lib/tsserver.js'
+"let g:tsuquyomi_use_dev_node_module = 2
+"let g:tsuquyomi_tsserver_path = '/google/src/head/depot/google3/third_party/javascript/node_modules/typescript/stable/lib/tsserver.js'
 
-nnoremap <silent> <leader>h :echo tsuquyomi#hint()<CR>
+"nnoremap <silent> <leader>h :echo tsuquyomi#hint()<CR>
 
 if !empty(glob("/usr/share/vim/google/google.vim"))
 source /usr/share/vim/google/google.vim

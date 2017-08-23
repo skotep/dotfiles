@@ -14,9 +14,13 @@ alias work='ssh skotep.svl.corp.google.com'
 alias grpe='grep'
 alias v='view'
 
+
 alias gc="cd /google/src/cloud/skotep/catan/google3/platforms/capacity/intent/catan"
 alias bt1="blaze test --test_output=all --test_sharding_strategy=disabled --test_env TEST_TOTAL_SHARDS=1 --test_env TEST_SHARD_INDEX=1"
-alias pr="g4 p -s relativepath | grep -v '^Local|^Change' | grep '[a-z]' | awk '{print \$1}'"
+
+alias p='g4 p'
+alias pr="g4 p -s relativepath | grep -v '^Default|^Local|^Change' | grep '[a-z]' | awk '{print \$1}'"
+
 alias tad="tmux a -d"
 
 function vf() {
@@ -26,20 +30,23 @@ function vf() {
     if [ "${#FILES[@]}" == 1 ]; then
         vi ${FILES[0]}
     else
-        select FILENAME in ${FILES[@]}; do
-            vi $FILENAME
-        done
+        select FILENAME in ${FILES[@]}; do vi $FILENAME; break; done;
     fi
 }
 
 function gig() {
-	filelist=$(g4 p -s relativepath | grep \.go | awk '{print $1}')
-	for file in $filelist; do
-	    echo "goimports $file"
-		goimports -w $file
-	done
-	for filedir in $(echo $filelist | xargs dirname | sort -u); do
-	    echo "glaze $filedir"
-		glaze $filedir
-	done
+	if [ "$1" == "" ]; then
+		filelist=$(g4 p -s relativepath | grep \.go | awk '{print $1}')
+		for file in $filelist; do
+			echo "goimports $file"
+			goimports -w $file
+		done
+		for filedir in $(echo $filelist | xargs dirname | sort -u); do
+			echo "glaze $filedir"
+			glaze $filedir
+		done
+	else
+		goimports -w $1
+		glaze $(dirname $1)
+	fi
 }
