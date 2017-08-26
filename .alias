@@ -19,6 +19,7 @@ alias gc="cd /google/src/cloud/skotep/catan/google3/platforms/capacity/intent/ca
 alias bt1="blaze test --test_output=all --test_sharding_strategy=disabled --test_env TEST_TOTAL_SHARDS=1 --test_env TEST_SHARD_INDEX=1"
 
 alias p='g4 p'
+alias m='g4 myclients'
 alias pr="g4 p -s relativepath | grep -v '^Default|^Local|^Change' | grep '[a-z]' | awk '{print \$1}'"
 
 alias tad="tmux a -d"
