@@ -51,3 +51,14 @@ function gig() {
 		glaze $(dirname $1)
 	fi
 }
+
+function rr() {
+	g4 p -s relativepath | grep -v '^Default|^Local|^Change' | grep '[a-z]' | awk '{print $1}' |\
+	while read file; do
+		lc=$(g4 diff $file | wc -l)
+		echo $file $lc
+		if [ ${lc} == 1 ]; then
+			g4 revert $file
+		fi
+	done
+}
