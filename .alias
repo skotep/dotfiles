@@ -39,18 +39,22 @@ function vf() {
 function gig() {
 	if [ "$1" == "" ]; then
 		filelist=$(g4 p -s relativepath | grep \.go | awk '{print $1}')
-		for file in $filelist; do
-			echo "goimports $file"
-			goimports -w $file
-		done
-		for filedir in $(echo $filelist | xargs dirname | sort -u); do
-			echo "glaze $filedir"
-			glaze $filedir
-		done
+		n=$(g4 p -s relativepath | grep \.go | wc -l)
+		if [ "$n" -gt 0 ]; then
+			for file in $filelist; do
+				echo "goimports $file"
+				goimports -w $file
+			done
+			for filedir in $(echo $filelist | xargs dirname | sort -u); do
+				echo "glaze $filedir"
+				glaze $filedir
+			done
+		fi
 	else
 		goimports -w $1
 		glaze $(dirname $1)
 	fi
+	taze -root -recursive
 }
 
 function rr() {
