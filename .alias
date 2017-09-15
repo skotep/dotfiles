@@ -67,3 +67,7 @@ function rr() {
 		fi
 	done
 }
+
+function ess() {
+	gimp "$(\ls -rt $HOME/Pictures/Screenshot* | tail -n 1)"
+}
