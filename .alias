@@ -11,11 +11,18 @@ alias df='df -h'
 alias du='du -h'
 alias ij='/opt/intellij-ue-stable/bin/idea.sh'
 alias work='ssh skotep.svl.corp.google.com'
+alias grep='/bin/grep --color=always'
 alias grpe='grep'
 alias v='view'
 
 
-alias gc="cd /google/src/cloud/skotep/catan/google3/platforms/capacity/intent/catan"
+function gc() {
+	d=$1
+	if [ -z "$d" ]; then
+		d=$(pwd | sed 's|/google3.*||' | sed 's|.*/||')
+	fi
+	cd /google/src/cloud/skotep/${d}/google3/platforms/capacity/intent/catan
+}
 alias bt1="blaze test --test_output=all --test_sharding_strategy=disabled --test_env TEST_TOTAL_SHARDS=1 --test_env TEST_SHARD_INDEX=1"
 
 alias p='g4 p'
@@ -38,8 +45,8 @@ function vf() {
 
 function gig() {
 	if [ "$1" == "" ]; then
-		filelist=$(g4 p -s relativepath | grep \.go | awk '{print $1}')
-		n=$(g4 p -s relativepath | grep \.go | wc -l)
+		filelist=$(g4 p -s relativepath | \grep \.go | awk '{print $1}')
+		n=$(g4 p -s relativepath | \grep \.go | wc -l)
 		if [ "$n" -gt 0 ]; then
 			for file in $filelist; do
 				echo "goimports $file"
@@ -54,11 +61,13 @@ function gig() {
 		goimports -w $1
 		glaze $(dirname $1)
 	fi
-	taze -root -recursive
+	if [ $(g4 p -s relativepath | \grep \.ts$ | wc -l) -gt 0 ]; then
+		taze -root -recursive
+	fi
 }
 
 function rr() {
-	g4 p -s relativepath | grep -v '^Default|^Local|^Change' | grep '[a-z]' | awk '{print $1}' |\
+	g4 p -s relativepath | \grep -v '^Default|^Local|^Change' | \grep '[a-z]' | awk '{print $1}' |\
 	while read file; do
 		lc=$(g4 diff $file | wc -l)
 		echo $file $lc
