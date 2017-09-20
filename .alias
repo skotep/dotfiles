@@ -27,8 +27,9 @@ alias bt1="blaze test --test_output=all --test_sharding_strategy=disabled --test
 
 alias p='g4 p'
 alias m='g4 myclients'
-alias pr="g4 p -s relativepath | grep -v '^Default|^Local|Change' | grep '[a-z]' | awk '{print \$1}'"
-alias prr="g4 p -s relativepath | grep -v '^Default|^Local|Change' | grep '[a-z]' | awk '{print \$1}' | grep -v '^\.\.'"
+alias pr="g4 p -s relativepath | \grep -v '^Default|^Local|Change' | \grep '[a-z]' | awk '{print \$1}'"
+alias prr="g4 p -s relativepath | \grep -v '^Default|^Local|Change' | \grep '[a-z]' | awk '{print \$1}' | \grep -v '^\.\.'"
+alias ppr='prr'
 
 alias tad="tmux a -d || tmux new -s work"
 
