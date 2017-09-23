@@ -14,6 +14,7 @@ alias work='ssh skotep.svl.corp.google.com'
 alias grep='/bin/grep --color=always'
 alias grpe='grep'
 alias v='view'
+alias diffys='diff --side-by-side -W 250'
 
 
 function gc() {
@@ -30,13 +31,14 @@ alias m='g4 myclients'
 alias pr="g4 p -s relativepath | \grep -v '^Default|^Local|Change' | \grep '[a-z]' | awk '{print \$1}'"
 alias prr="g4 p -s relativepath | \grep -v '^Default|^Local|Change' | \grep '[a-z]' | awk '{print \$1}' | \grep -v '^\.\.'"
 alias ppr='prr'
+alias gm="g4 myclients | tr ':' ' ' | cut -d\   -f 3,6 | column -t | sort -k 2"
 
 alias tad="tmux a -d || tmux new -s work"
 
 function vf() {
 	src=$2
 	if [ -z "${src}" ]; then src="."; fi
-    FILES=($(find "${src}" | grep $1))
+    FILES=($(find "${src}" | \grep $1))
     if [ "${#FILES[@]}" == 1 ]; then
         vi ${FILES[0]}
     else
