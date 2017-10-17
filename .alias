@@ -33,6 +33,15 @@ alias prr="g4 p -s relativepath | \grep -v '^Default|^Local|Change' | \grep '[a-
 alias ppr='prr'
 alias gm="g4 myclients | tr ':' ' ' | cut -d\   -f 3,6 | column -t | sort -k 2"
 
+function gmp() {
+	g4 myclients | tr ':' ' ' | cut -d\   -f 3 | column -t | sort -k 2 |\
+	while read g d; do
+		g4d $g
+		echo "#############################################################"; echo $g; echo "";
+		g4 p
+	done
+}
+
 alias tad="tmux a -d || tmux new -s work"
 alias taze='/usr/bin/taze -root -recursive'
 
