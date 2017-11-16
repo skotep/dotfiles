@@ -1,6 +1,92 @@
-PS1='\[\033[1;36m\]\w>\n\D{%F %T} \[\033[01;31m\]\h\[\033[01;36m\] \[\033[01;32m\][\!] \[\033[00m\]'
-export PATH="$HOME/bin:$PATH"
-export GREP_OPTIONS='-RE --exclude=*.pyc --exclude-dir=.git'
-. $HOME/.alias
-set -o vi
-export P4DIFF='git diff --no-index'
+
+# Enable colors for ls, etc.  Prefer ~/.dir_colors #64489
+
+if [[ -f ~/.dir_colors ]]; then
+	eval `/usr/bin/dircolors -b ~/.dir_colors`
+else
+	eval `/usr/bin/dircolors -b /etc/DIR_COLORS`
+fi
+alias ls="ls --color=auto"
+
+# Change the window title of X terminals 
+case $TERM in
+	xterm*|rxvt*|Eterm)
+		PROMPT_COMMAND='echo -ne "\033]0;${HOSTNAME%%.*}:${PWD/$HOME/~}\007"'
+		#PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}\007"'
+		;;
+	kterm*)
+		PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}\007"'
+		TERM=xterm
+		;;
+	screen)
+		PROMPT_COMMAND='echo -ne "\033_${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}\033\\"'
+		;;
+esac
+
+LD_LIBRARY_PATH=${HOME}/lib:/usr/local/lib:${LD_LIBRARY_PATH}
+export PATH=${HOME}/bin:${HOME}/lbin:${HOME}/tbin:/sbin:${HOME}/linux/bin:"/cygdrive/c/Program Files/Java/jdk1.8.0_60/bin":/cygdrive/c/Python27/:/cygdrive/c/Python27/Scripts:${PATH}:/usr/local/bin
+
+export GDFONTPATH=/usr/share/fonts/truetype/ttf-bitstream-vera/:/usr/share/fonts/truetype/ttf-dejavu/:/usr/share/fonts/truetype/msttcorefonts/:/usr/share/fonts/truetype/ttf-sil-gentium:/usr/share/fonts/truetype/openoffice:/usr/share/fonts/truetype/ttf-mgopen:/usr/share/wine/fonts/
+
+
+PS1='\[\033[1;36m\]\w>\n \[\033[01;31m\]\h\[\033[01;36m\] \[\033[01;32m\][\!] \[\033[00m\]'
+
+HISTCONTROL=ignoreboth
+HISTSIZE=999
+HISTIGNORE="x:history:h:"
+HISTTIMEFORMAT='%a %T '
+MAILCHECK=-1
+HISTBASE=~/.histories
+
+_hash() {
+    echo "$@" | md5sum | awk '{print $1}'
+#    echo `pwd` | sed 's/\//./g'
+}
+
+_load_history() {
+    HISTFILE=$HISTBASE/$(_hash $(pwd))
+    touch $HISTFILE
+    history -c
+    history -r
+}
+
+mycd() {
+    HISTFILE=~/.bash_history
+    history -w
+    HISTFILE=$HISTBASE/$(_hash $(pwd))
+    history -w
+    builtin cd "$@"
+    echo "# $(pwd) $(date)" >> $HISTFILE
+    _load_history
+}
+
+
+shopt -s histappend
+shopt -s cdspell
+shopt -s dotglob
+shopt -s extglob
+shopt -s no_empty_cmd_completion
+shopt -s nocaseglob
+shopt -u nullglob
+
+#complete -v -F _cd nospace filenames cd
+#alias cd=mycd
+
+#source ${HOME}/.bash_alias
+#source ${HOME}/.idlenv
+#source ${HOME}/.rnplrc
+
+PRINTER=Deskjet_5900_series
+LANG=en_US
+
+export PYTHONDONTWRITEBYTECODE=true
+
+if [ -z "${DISPLAY}" ]; then
+    export DISPLAY=:0.0
+fi
+
+export PATH=${PATH}:"/cygdrive/c/Program Files/Android/Android Studio/jre/bin"
+
+export ANDROID_HOME=/cygdrive/c/Users/skotep/AppData/Local/Android/Sdk
+export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:"/cygdrive/c/Program Files/Geth/"
+export ANDROID_HOME=c:/Users/skotep/AppData/Local/Android/Sdk
