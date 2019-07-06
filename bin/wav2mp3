@@ -1,0 +1,6 @@
+find . -iname "*.wav" -type f | while read wav; do
+  echo $wav
+  (ffmpeg -i $wav -codec:a libmp3lame -qscale:a 2 $(echo $wav | sed 's/wav$/mp3/') && rm $wav)
+  echo "complete $wav"
+done
+

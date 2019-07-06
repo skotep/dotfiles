@@ -1,0 +1,10 @@
+#!/bin/bash
+if [ -e "$1" ]; then FILE=$1; shift; fi
+L=$1
+if [ -z "$L" ]; then L=1; fi
+if [ -n "$FILE" ]; then 
+  cat $FILE |\
+  head -n $L | tail -n 1 | tr ' ' '\n' | cat -n
+else
+  head -n $L | tail -n 1 | tr ' ' '\n' | cat -n
+fi

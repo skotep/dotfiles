@@ -1,0 +1,33 @@
+#!/bin/bash
+DST=$HOME/Pictures/Pixel
+SRC=/sdcard/DCIM
+mkdir -p $DST
+
+ADB="adb -s $(adb devices -l | grep 'Pixel ' | cut -d\  -f 1)"
+
+if [ -z "$1" ]; then 
+  $ADB pull -a $SRC/Camera $DST
+fi
+
+join \
+  <($ADB shell find $SRC/Camera -type f | sort | sed 's|'$SRC'/Camera/||') \
+  <(cd $DST/Camera && find . -type f | sort | sed 's|^./||') |\
+while read f; do
+  echo rm $SRC/Camera/$f
+done | $ADB shell
+
+WHAT="/sdcard/WhatsApp/Media/WhatsApp Images/Sent"
+if [ -z "$1" ]; then
+  $ADB pull -a "${WHAT}" $DST
+  rm $DST/Sent/.nomedia
+fi
+join \
+  <($ADB shell find "\"${WHAT}\"" -type f | sort | sed 's/.*Sent\///') \
+  <(cd $DST/Sent && find . -type f | sort | sed 's|^./||') |\
+while read f; do
+  echo rm "${WHAT}/$f"
+done | $ADB shell
+
+echo "Remaining files on $SRC"
+$ADB shell find $SRC/Camera -type f
+$ADB shell find "\"${WHAT}\"" -type f

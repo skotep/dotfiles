@@ -1,0 +1,9 @@
+#!/usr/bin/awk -f
+{
+ s = s + $1
+ n = n + 1 
+}
+
+END {
+  print(s/n, n, s)
+}
