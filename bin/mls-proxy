@@ -1,0 +1,8 @@
+#!/bin/bash -ex
+
+PROXY="ec2-54-210-94-108.compute-1.amazonaws.com"
+POD=$(kubectl get pods -n staging -l'app=mls-data-ingest,role in (worker)' | grep Running | head -n 1 | cut -d\  -f1)
+
+kubectl -n staging cp ~/.ssh/mls_proxy.pem  ${POD}:.
+kubectl --namespace staging exec -it ${POD} -- ssh -i mls_proxy.pem ubuntu@${PROXY}
+

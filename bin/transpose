@@ -1,8 +1,16 @@
-#!/usr/bin/awk -f
+#!/usr/bin/awk -F, -f
 BEGIN {
-  
+  #FS=","
+  OFS=","
 } {
-
-} END {
-
+  for (i=1; i<=NF; ++i) {
+    rows[i, NR] = $i
+  }
+}
+END {
+  for (i=1; i<=NF; ++i) {
+    for (j=1; j<=NR; ++j) {
+      printf rows[i, j] (j==NR ? RS : FS)
+    }
+  }
 }

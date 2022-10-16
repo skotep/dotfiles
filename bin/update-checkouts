@@ -1,0 +1,19 @@
+#!/bin/bash
+function on_vpn {
+    /sbin/ifconfig | grep -Fq 10.253.
+}
+
+if on_vpn; then
+
+echo "$(date +'%Y%m%dT%H%M%S %z')"
+cd $HOME/go/src/github.com/opendoor-labs
+find . -type d -maxdepth 1 | \grep '/' | while read d; do
+  echo "stepping into $d"
+  (cd $d && git fetch) || break
+done
+echo "COMPLETE!"
+echo "$(date +'%Y%m%dT%H%M%S %z')"
+
+else
+  echo "not on vpn"
+fi

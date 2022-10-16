@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "PROG: $1"
+shift
+echo $@

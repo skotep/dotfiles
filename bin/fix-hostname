@@ -1,0 +1,23 @@
+#!/bin/zsh 
+do_cache=false
+
+for key in HostName LocalHostName ComputerName; do
+	value=$(/usr/sbin/scutil --get ${key}) 
+	echo "checking ${key} -> ${value}"
+	if [[ ${value} != "spod" ]]; then
+		echo "... setting"
+		/usr/sbin/scutil --set ${key} spod
+    if !${do_cache}; then
+      echo XX$(date +"%Y-%m-%d %H:%M:%S %Z") from ${value} >> /Users/sep/tmp/hostname.log
+    fi
+    echo $(date +"%Y-%m-%d %H:%M:%S %Z") from ${value} >> /Users/sep/tmp/hostname.log
+    do_cache=true
+	fi
+done
+
+if ${do_cache}; then
+  echo "flushing cache"
+  /usr/bin/dscacheutil -flushcache
+fi
+
+echo "DONE!"

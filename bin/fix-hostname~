@@ -1,0 +1,7 @@
+#!/bin/zsh 
+scutil --get HostName
+scutil --get LocalHostName
+scutil --get ComputerName
+scutil --set HostName spod
+scutil --set LocalHostName spod
+scutil --set ComputerName spod

@@ -1,0 +1,545 @@
+alias sa='source $HOME/.alias'
+#if [ "$(uname)" == "Darwin" ]; then
+#  alias ls='ls -GF'
+#else
+#  alias ls='ls -F --color=always'
+#fi
+alias j='jobs -l'
+alias less='less -R'
+alias h='history | less'
+function ht() {
+  (tee >((head $@ ; echo "--") >&2 ; cat > /dev/null) | tail $@ ) 2>&1
+}
+alias df='df -h'
+alias du='du -h'
+alias ij='/opt/intellij-ue-stable/bin/idea.sh'
+alias work='ssh skotep.svl.corp.google.com'
+alias grep='\grep --color=always'
+alias grpe='grep'
+alias v='vim -R'
+alias diffys='diff -w --suppress-common-lines --side-by-side -W 120'
+alias diffy='diff --side-by-side -W 250 --suppress-common-lines'
+alias col='column -s, -t'
+
+function check_agent() {
+  if [[ $(ssh-add -L | grep MacBook | wc -l) == 0 ]]; then
+    echo "Adding ssh identity to agent"
+    ssh-add -K -t 99999999999
+  fi
+}
+
+function psp() {
+  ps uax | \grep -E ^USER
+  ps uax | \grep -E ^spollack |\
+    awk '$3 > 0 {print $0}' |\
+    sort -n -k3
+}
+
+function ffind() {
+  DIR=$1; shift
+  find ${DIR} -type f $@
+}
+
+#function gc() {
+#	d=$1
+#	if [ -z "$d" ]; then
+#		d=$(pwd | sed 's|/google3.*||' | sed 's|.*/||')
+#	fi
+#	cd /google/src/cloud/skotep/${d}/google3/platforms/capacity/intent/catan
+#}
+
+alias bt1="blaze test --test_output=all --test_sharding_strategy=disabled --test_env TEST_TOTAL_SHARDS=1 --test_env TEST_SHARD_INDEX=1"
+
+#alias p='g4 p'
+alias m='g4 myclients'
+alias pr="g4 p -s relativepath | \grep -v '^Default|^Local|Change' | \grep '[a-z]' | awk '{print \$1}'"
+alias prr="g4 p -s relativepath | \grep -v '^Default|^Local|Change' | \grep '[a-z]' | awk '{print \$1}' | \grep -v '^\.\.'"
+alias ppr='prr'
+alias gm="g4 myclients | tr ':' ' ' | cut -d\   -f 3,6 | column -t | sort -k 2"
+
+function gmp() {
+	g4 myclients | tr ':' ' ' | cut -d\   -f 3 | column -t | sort -k 2 |\
+	while read g d; do
+		g4d $g
+		echo "#############################################################"; echo $g; echo "";
+		g4 p
+	done
+}
+
+alias tad="tmux a -d || tmux new -s work"
+alias tap="tmux a -t play || tmux new -s play"
+alias taze='/usr/bin/taze -root -recursive'
+alias trw='tmux rename-window'
+
+function vf() {
+	src=$2
+	if [ -z "${src}" ]; then src="."; fi
+    FILES=($(find "${src}" | \grep $1 | \grep -Ev 'pyc$'))
+    if [ "${#FILES[@]}" == 1 ]; then
+        vi ${FILES[0]}
+    else
+        select FILENAME in ${FILES[@]}; do vi $FILENAME; break; done;
+    fi
+}
+
+function gig() {
+	if [ "$1" == "" ]; then
+		filelist=$(g4 p -s relativepath | \grep \.go | awk '{print $1}')
+		n=$(g4 p -s relativepath | \grep \.go | wc -l)
+		if [ "$n" -gt 0 ]; then
+			for file in $filelist; do
+				echo "goimports $file"
+				goimports -w $file
+			done
+			for filedir in $(echo $filelist | xargs dirname | sort -u); do
+				echo "glaze $filedir"
+				glaze $filedir
+			done
+		fi
+	else
+		goimports -w $1
+		glaze $(dirname $1)
+	fi
+}
+
+
+function rr() {
+	g4 p -s relativepath | \grep -v '^Default|^Local|^Change' | \grep '[a-z]' | awk '{print $1}' |\
+	while read file; do
+		lc=$(g4 diff $file | wc -l)
+		echo $file $lc
+		if [ ${lc} == 1 ]; then
+			g4 revert $file
+		fi
+	done
+}
+
+function ess() {
+	gimp "$(\ls -rt $HOME/Pictures/Screenshot* | tail -n 1)"
+}
+
+function p() {
+  check_agent
+
+  local PR=$(ps uax | grep dev-proxy | grep -v grep | awk '{print $2}')
+  if [[ -n "${PR}" ]]; then
+    echo -n "Kill running process? [Y/n] "
+    read KILLIT
+    if [[ "$KILLIT" != "Y" ]]; then
+      echo "must say Y"
+      return 1
+    fi
+    echo "Killing -$PR with -9"
+    echo "Rerun to open tunnel"
+    kill -9 -$PR
+  else 
+    ssh -f -N -o ConnectTimeout=10 dev-proxy || ssh -f -N -o ConnectTimeout=10 dev-proxy-b || return 1
+    local PR=$(ps uax | grep dev-proxy | grep -v grep | awk '{print $2}')
+    echo "caffeinating... ${PR}"
+    caffeinate -w ${PR} -s -d
+  fi
+  echo "all done"
+}
+
+
+alias e="ssh moddev-eqinf.int.voleon.net"
+alias d="ssh spollack.dev.voleon.net"
+alias r="ssh rose-spollack.rdev.voleon.net"
+alias m="ssh rose-dataeng.rmod.voleon.net"
+alias k='ssh ksolan-dev7.int'
+
+function scd() {
+  scp $1 spollack.dev.voleon.net:
+}
+function scm() {
+  scp $1 rose-dataeng.rmod.voleon.net:
+}
+function scr() {
+  scp $1 rose-spollack.rdev.voleon.net:
+}
+function sce() {
+  scp $1 vmoddev-eqinf.int.voleon.net:
+}
+function pscp() {
+  scp vmoddev-eqinf.int.voleon.net:$1 .
+}
+
+
+alias mlb="\grep -E '^build.*: ' Makefile | sed 's/:.*//'"
+alias mlb="\grep -E '^[a-z\/%_\-]*:' Makefile | sed 's/:.*//'"
+
+function ztail() {
+  local FILE=$1; shift
+  zcat ${FILE} | tail $@
+}
+
+function zhead() {
+  local FILE=$1; shift
+  zcat ${FILE} | head $@
+}
+alias ngrid='grid'
+alias GRID='grid'
+
+function hgrep() {
+  (zcat ${@: -1} 2>/dev/null || cat ${@: -1}) | head -n 1
+  zgrep -E $@
+}
+
+function sgrep() {
+  local COL=$1; shift
+  zcat ${@: -1} | head -n 1
+  zgrep -E $@ | sort -k ${COL} -t,
+}
+
+alias gtouch='git commit --allow-empty -m touch'
+alias gcan='git commit --amend --no-edit'
+alias grc='git add . && git rebase --continue'
+function gclean() {
+  local br=$(git symbolic-ref --short HEAD)
+  if [ "$br" != "master" ]; then
+    gc master
+  fi
+  local HEADS=$(githeads)
+  pushd ${HEADS} &> /dev/null
+  local STALE=$(git branch | \grep -v master | \grep -v '\*' | \grep '\.fork$' | \grep -v -f <(git branch | \grep -v master | \grep -v '\*' | \grep -v '\.fork$') | xargs)
+  if [ -n "${STALE}" ]; then
+    echo $STALE | xargs rm
+    echo $STALE | xargs git branch -D 
+  fi
+  popd &> /dev/null
+  grep -vf <(ls $(githeads)) <(git branch | grep -v master | grep -v '\*' | grep -Ev fork$) | xargs git branch -D
+  gc
+}
+
+function gnew() {
+  branchName=$1
+  if [ -z "${branchName}" ]; then
+    echo "usage: gnew <branchName>"
+    return 1
+  fi
+  gc master
+  gsync
+  
+  git checkout -b ${branchName}
+  local HEADS=$(githeads)
+  cat ${HEADS}/master > ${HEADS}/${branchName}.fork
+}
+
+function gstash() {
+  # staged files
+  if [ $(git diff --name-only --cached | wc -l) != 0 ]; then needPop=true; fi
+  # untracked files
+  if [ $(git ls-files --modified --others --exclude-standard | wc -l) != 0 ]; then needPop=true; fi
+  if $needPop; then
+    echo ">>> Stashing local changes and new files..."
+    git add -- .
+    # TODO check for initial commit
+    # TODO save this is a push state
+    git commit -a -m 'GIT-STASH'
+  fi
+}
+
+function gpop() {
+  if [[ "$(git log --pretty=%s -n 1 HEAD)" == "GIT-STASH" ]]; then
+    echo ">>> Popping local changes and new files..."
+    git reset HEAD~1
+  fi
+}
+
+function githeads() {
+  local GIT="$(git rev-parse --show-toplevel)/.git"
+  if [ -d "${GIT}" ]; then
+    echo "${GIT}/refs/heads"
+  else
+    echo "$(cat ${GIT} | awk '{print $2}')/refs/heads"
+  fi
+}
+
+function gsync() {
+  pushd $(git rev-parse --show-toplevel)
+
+  local HEADS=$(githeads)
+  local br=$(git symbolic-ref --short HEAD)
+  local needPop=false
+
+  [ "$br" == "master" ] && isBranch=false || isBranch=true
+  if $isBranch; then
+    gstash
+    git checkout master
+  fi
+
+  git fetch
+  git merge --ff-only origin/master
+
+  if $isBranch; then
+    git checkout $br
+    git rebase --quiet --onto master master $br 
+    cat ${HEADS}/master > ${HEADS}/${br}.fork
+
+    gpop
+  fi
+
+  popd
+}
+
+function getFork() {
+  local br=$(githeads)/../../$(git symbolic-ref HEAD)
+  if [ -e ${br}.fork ]; then
+    echo ${br}.fork
+  else
+    echo ${br}
+  fi
+}
+
+function gd() {
+  git diff $(cat $(getFork)) -- $@
+}
+
+function greset() {
+  if [ -z "$1" ]; then
+    echo "usage: greset <file*>"
+    return 1
+  fi
+  git checkout $(cat $(getFork)) -- $@
+}
+alias grevert='greset'
+
+function gs() {
+  local br=$(git symbolic-ref --short HEAD)
+  if [ -z "${br}" ]; then
+    return 1
+  fi
+  if [ "$br" == "master" ]; then
+    git status
+  else
+    pushd $(git rev-parse --show-toplevel) &> /dev/null
+    #TODO colorize
+    git diff $(cat $(getFork)) --name-status
+    git ls-files --modified --others --exclude-standard |\
+      grep -v -f <(git diff $(cat $(getFork)) --name-status | awk '{print $2}') |\
+      sed 's/^/- 	/'
+    popd &> /dev/null
+  fi
+}
+
+alias ga="git commit --no-edit --amend"
+
+function gsend() {
+  if [ -n "$1" ]; then
+    shift
+    echo "Amending last commit"
+    git commit --no-edit --amend -a
+  fi
+  local br=$(git symbolic-ref --short HEAD)
+  echo git push --force origin ${br}:${br}$@
+  git push --force origin ${br}:${br}$@
+}
+
+function gc() {
+  if [ -z $1 ]; then
+    pushd $(githeads) &> /dev/null
+    ls -rt | grep -Ev fork$ | while read f; do echo $(date -r $f +"%Y-%m-%d %H:%M:%S") $f; done
+    popd &> /dev/null
+    echo ""
+    grep -vf <(ls $(githeads)) <(git branch | grep -Ev fork$)
+  else
+    if [ "$1" == "-b" ]; then
+      gnew $2
+      return 
+    fi
+    if [ "$2" == "-b" ]; then
+      gnew $1
+      return 
+    fi
+    # check for existence
+    if [ $(git branch | awk '{print $1}' | grep -E "^$1$" | wc -l) == 0 ]; then
+      echo "Branch $@ does not exist"
+      git branch | grep -Ev fork$
+      return 1
+    fi
+    gstash
+    git checkout $@
+    gpop
+    gs
+  fi
+}
+
+alias gss='git status'
+alias gdd='git diff'
+alias gl='git log --graph --pretty="%C(yellow)%h%Creset%C(cyan)%d%Creset %s %C(magenta)<%an>%Creset %C(dim green)(%ci)" --first-parent master HEAD'
+alias gll='gl -n 10'
+alias gb='git branch | grep -Ev fork$'
+
+function migrate() {
+  if [ -z $1 ]; then
+    echo "usage: migrate <from-checkout>"
+    return 1
+  fi
+  pushd $(git rev-parse --show-toplevel) &> /dev/null
+  local br=$(git symbolic-ref --short HEAD)
+  if [ "${br}" == "master" ]; then
+    echo "Create a new branch before copying."
+    return 1
+  fi
+  echo "State before migration"
+  gs
+
+  pushd ../$1 &> /dev/null
+  echo -e "\nState for $(git rev-parse --show-toplevel)"
+  gs
+
+  (git diff $(cat $(getFork)) --name-status && \
+  git ls-files --modified --others --exclude-standard | sed 's/^/- 	/') |\
+  awk '{print $2}' | sort -u | tar -zcf /tmp/gcm.tgz -T -
+
+  popd &> /dev/null
+
+  tar -zxf /tmp/gcm.tgz
+
+  echo -e "\nState after migration"
+  gs
+  popd &> /dev/null
+}
+
+function mrepo() {
+  if [ -z $1 ]; then
+    echo "usage: mrepo <from-branch>"
+    return 1
+  fi
+  local br=$(git symbolic-ref --short HEAD)
+  if [ "${br}" == "master" ]; then
+    echo "Create a new branch before copying."
+    return 1
+  fi
+  if [ $(git branch | grep $1 | wc -l) == 0 ]; then
+    echo "Branch $@ does not exist"
+    git branch | grep -Ev fork$
+    return 1
+  fi
+  pushd $(git rev-parse --show-toplevel) &> /dev/null
+  gstash
+  git checkout $@
+
+  (git diff $(cat $(getFork)) --name-status && \
+  git ls-files --modified --others --exclude-standard | sed 's/^/- 	/') |\
+  awk '{print $2}' | sort -u | tar -zcf /tmp/gc.tgz -T -
+
+  git checkout $br
+  gpop
+
+  echo "Migrating files"
+
+  tar -zxf /tmp/gc.tgz
+  popd &> /dev/null
+  gs
+}
+
+alias sq='sqlite3 --header --column'
+
+function fixssh() {
+  SSH_AUTH_SOCK=$(\ls -rta /tmp/ssh-*/agent* | tail -n 1)
+  SOCK="/tmp/ssh-agent-$USER-$HOSTNAME-tmux"
+  if test $SSH_AUTH_SOCK && [ $SSH_AUTH_SOCK != $SOCK ]
+  then
+    rm -f ${SOCK}
+    ln -sf $SSH_AUTH_SOCK $SOCK
+    export SSH_AUTH_SOCK=$SOCK
+    #tmux setenv SSH_AUTH_SOCK $SSH_AUTH_SOCK
+  fi
+}
+
+alias gitsub='git submodule update --init --remote'
+
+function gitclone() {
+  REPO=$1; shift
+  git clone "git@vgithub.global.voleon.net:Voleon/${REPO}" $@
+  #git clone "git@vgithub01.main.voleon.net:Voleon/${REPO}" $@
+}
+
+alias setname='tmux rename-window "$(hostname | sed "s/\.voleon.*//")"'
+
+GREEN='\033[0;32m'
+RED='\033[0;31m]'
+NC='\033[0m'
+
+alias st11="st moddev11.int"
+
+function st() {
+  base="$2"
+  if [[ -z "${base}" ]]; then 
+    base=$(echo $1 | cut -d\. -f 1)
+  fi
+  local session="work"
+  ssh $1 -t 'tmux -CC a -d -t '"${session}"' || tmux -CC new -s '"${session}"''
+}
+
+function sp() {
+  local HOST=$1; shift
+  if [ -z ${HOST} ]; then
+    echo "usage: sp HOST [LOCAL_PORT=8888] [HOST_PORT=LOCAL_PORT]"
+    return
+  fi
+  local LOCAL_PORT=$2; shift
+  local HOST_PORT=$3; shift
+  if [ -z ${LOCAL_PORT} ]; then LOCAL_PORT=8888; fi
+  if [ -z ${HOST_PORT} ]; then HOST_PORT=${LOCAL_PORT}; fi
+  ssh -f -N -L ${LOCAL_PORT}:localhost:${HOST_PORT} ${HOST}
+  echo "Tunneling localhost:${LOCAL_PORT} to ${HOST}:${HOST_PORT}"
+}
+
+function ip() {
+  curl -s https://api.ipify.org
+}
+
+function homeip() {
+  dt=$(($(date +%s) - $(date -r $HOME/.home.ip +%s)))
+  if [ $dt -gt 259200 ]; then # 3 days
+    echo "File is stale fetching from S3"
+    touch $HOME/.home.ip
+    aws s3 cp s3://bucket.skotep/home.ip $HOME/home.ip
+  fi
+  tail -n 1 home.ip | cut -d\  -f 2
+  #echo "24.6.61.54"
+}
+
+function ishome () {
+    if [ "$(ip)" == "$(homeip)" ]; then
+        if [ ! -z "$1" ]; then
+            echo "You're home";
+        fi;
+        return 0;
+    else
+        if [ ! -z "$1" ]; then
+            echo "Not home! $(ip) != $(homeip)";
+        fi;
+        return 1;
+    fi
+}
+
+function phome() {
+  if $(ishome); then
+    IP="192.168.86.31"
+  else
+    IP=$(homeip)
+  fi
+  ping ${IP} $@
+}
+
+function home() {
+  if $(ishome); then
+    ssh -i $HOME/.ssh/id_home skotep@192.168.86.31
+  else 
+    echo "Connecting remotely..."
+    ssh -i $HOME/.ssh/id_home -p 3122 skotep@$(homeip)
+  fi
+}
+
+function shome() {
+  TARGET=$2A
+  if [ -z "${TARGET}" ]; then TARGET=$(basename $1); fi
+  if $(ishome); then
+    scp $1 skotep@192.168.86.31:${TARGET}
+  else
+    scp -i $HOME/.ssh/id_home -P 3122 $1 skotep@$(homeip):${TARGET}
+  fi
+}

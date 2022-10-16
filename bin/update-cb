@@ -1,0 +1,4 @@
+#!/bin/bash
+cd ~/py/coinbase
+.venv/bin/python cb.py
+.venv/bin/python gem.py

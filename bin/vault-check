@@ -1,0 +1,1 @@
+VAULT_ADDR='https://vault.services.opendoor.com:8200' vault list secret/dev
