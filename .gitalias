@@ -1,0 +1,341 @@
+#!/bin/bash
+alias gtouch='git commit --allow-empty -m touch'
+alias gcan='git commit --amend --no-edit'
+alias grc='git add . && git rebase --continue'
+
+#complete -o default -F __git_complete gc
+
+function getMaster() {
+  if [[ $(git branch -a 2> /dev/null | grep 'main$' | wc -l) -gt 1 ]]; then
+    echo "main"
+  else
+    echo "master"
+  fi
+  #git branch -a | grep HEAD | sed 's|.*origin/||'
+}
+
+function cclone() {
+    local DST="$2";
+    if [ -z "${DST}" ]; then
+        DST="$1";
+    fi;
+    git clone git@nacho.striveworks.us:chariot/$1.git ${DST}
+}
+
+function gclone() {
+  local DST="$2"
+  if [ -z "${DST}" ]; then DST="$1"; fi
+  #git clone git@nacho.striveworks.us:$1.git ${DST}
+  git clone git@github.com:Striveworks/$1.git ${DST}
+}
+
+function gdel() {
+  git branch | grep -c $1
+  git branch -D $1
+  git branch -D $1.fork
+}
+
+function gclean() {
+  local master=$(getMaster)
+  local br=$(git symbolic-ref --short HEAD)
+  if [[ "$br" != "$master" ]]; then
+    gc $master
+  fi
+  if [ "$1" == "--all" ]; then
+    git branch | grep -v $master | grep -vE '\.fork' | while read f; do git branch -D $f; done
+  fi
+  local HEADS=$(githeads)
+  pushd ${HEADS} &> /dev/null
+  local STALE=$(git branch | \grep -v $master | \grep -v '\*' | \grep '\.fork$' | \grep -v -f <(git branch | \grep -v $master | \grep -v '\*' | \grep -v '\.fork$') | xargs)
+  if [ -n "${STALE}" ]; then
+    echo $STALE | xargs rm
+    echo $STALE | xargs git branch -D 
+  fi
+  popd &> /dev/null
+  grep -vf <(ls $(githeads)) <(git branch | grep -v $master | grep -v '\*' | grep -Ev fork$) | xargs git branch -D
+  gc
+}
+
+function gnew() {
+  branchName=$1
+  if [ -z "${branchName}" ]; then
+    echo "usage: gnew <branchName>"
+    return 1
+  fi
+  gc $(getMaster)
+  gsync
+  
+  git checkout -b ${branchName}
+  local HEADS=$(githeads)
+  cat ${HEADS}/$(getMaster) > ${HEADS}/${branchName}.fork
+}
+
+function gstash() {
+  # staged files
+  if [ $(git diff --name-only --cached | wc -l) != 0 ]; then needPop=true; fi
+  # untracked files
+  if [ $(git ls-files --modified --others --exclude-standard | wc -l) != 0 ]; then needPop=true; fi
+  if $needPop; then
+    echo ">>> Stashing local changes and new files..."
+    git add -- .
+    # TODO check for initial commit
+    # TODO save this is a push state
+    git commit --no-verify -a -m 'GIT-STASH'
+  fi
+}
+
+function gpop() {
+  if [[ "$(git log --pretty=%s -n 1 HEAD)" == "GIT-STASH" ]]; then
+    echo ">>> Popping local changes and new files..."
+    git reset HEAD~1
+  fi
+}
+
+function githeads() {
+  git rev-parse --show-toplevel &> /dev/null
+  if [ "$?" != 0 ]; then
+    return 1
+  fi
+  local GIT="$(git rev-parse --show-toplevel)/.git"
+  if [ -d "${GIT}" ]; then
+    echo "${GIT}/refs/heads"
+  else
+    echo "$(cat ${GIT} | awk '{print $2}')/refs/heads"
+  fi
+}
+
+function gsync() {
+  if $(! isGithub) && $(! check_vpn); then
+    echo -e "\033[31;40mMust be connected to VPN!\033[0;37m"
+    return 1
+  fi
+  pushd $(git rev-parse --show-toplevel)
+
+  local HEADS=$(githeads)
+  local br=$(git symbolic-ref --short HEAD)
+  local needPop=false
+  local master=$(getMaster)
+
+  [[ "$br" == "$master" ]] && isBranch=false || isBranch=true
+  if $isBranch; then
+    gstash
+    git checkout $master
+  fi
+
+  git fetch
+  git merge --ff-only origin/$master
+  if [ ! -e "${HEADS}/$master" ]; then
+    git rev-parse origin/$master > "${HEADS}/$master"
+  fi
+
+  if $isBranch; then
+    git checkout $br
+    git rebase --quiet --onto $master $master $br 
+    cat ${HEADS}/$master > ${HEADS}/${br}.fork
+
+    gpop
+  fi
+
+  popd
+}
+
+function getFork() {
+  local br=$(githeads)/../../$(git symbolic-ref HEAD)
+  if [ -e ${br}.fork ]; then
+    echo ${br}.fork
+  else
+    echo ${br}
+  fi
+}
+
+function gd() {
+  git diff "$(cat $(getFork))" -- $@
+}
+
+function greset() {
+  if [ -z "$1" ]; then
+    echo "usage: greset <file*>"
+    return 1
+  fi
+  git checkout $(cat $(getFork)) -- $@
+}
+alias grevert='greset'
+
+function gs() {
+  local br=$(git symbolic-ref --short HEAD)
+  if [ -z "${br}" ]; then
+    return 1
+  fi
+  if [[ "$br" == "$(getMaster)" ]]; then
+    git status $@
+  else
+    pushd $(git rev-parse --show-toplevel) &> /dev/null
+    #TODO colorize
+    git diff $(cat $(getFork)) --name-status -- $@
+    git ls-files --modified --others --exclude-standard -- $@ |\
+      grep -v -f <(git diff $(cat $(getFork)) --name-status | awk '{print $2}') |\
+      sed 's/^/- 	/'
+    popd &> /dev/null
+  fi
+}
+
+alias ga="git commit --no-edit --amend"
+
+function gtag() {
+  if [ -z "$1" ]; then
+    git for-each-ref --sort=creatordate --format '%(refname),%(creatordate)' refs/tags |\
+      sed 's,^refs/tags/,,' | column -s, -t
+  else
+    git tag -f $1
+    git push --force origin $1
+  fi
+}
+
+function gsend() {
+  if [ -n "$1" ]; then
+    shift
+    echo "Amending last commit"
+    git commit --no-edit --amend -a
+  fi
+  local br=$(git symbolic-ref --short HEAD)
+  echo git push --force origin ${br}:${br}$@
+  git push --force origin ${br}:${br}$@
+}
+
+function gpush() {
+  if [ -n "$1" ]; then 
+    br="$1"
+  else
+    br=$(git symbolic-ref --short HEAD)
+  fi
+  set -x
+  git push --set-upstream origin ${br}
+  set +x
+}
+
+function gc() {
+  githeads > /dev/null
+  if [ "$?" != 0 ]; then
+    echo "not in a git repo"
+    return 1
+  fi
+  if [ -z $1 ]; then
+    pushd $(githeads) &> /dev/null
+    ls -rt | grep -Ev fork$ | while read f; do echo $(date -r $f +"%Y-%m-%d %H:%M:%S") $f; done
+    popd &> /dev/null
+    echo ""
+    grep -vf <(ls $(githeads)) <(git branch 2> /dev/null | grep -Ev fork$)
+  else
+    if [[ "$1" == "-b" ]]; then
+      gnew $2
+      return 
+    fi
+    if [[ "$2" == "-b" ]]; then
+      gnew $1
+      return 
+    fi
+    # check for existence
+    if [[ $(git branch | sed 's/*//' | awk '{print $1}' | grep -E "^$1$" | wc -l) == 0 ]]; then
+      echo -e "${RED}Branch $@ does not exist${NC}"
+      git branch | grep -Ev fork$
+      return 1
+    fi
+    gstash
+    git checkout $@
+    gpop
+    echo "---"
+    gs
+  fi
+}
+
+alias gss='git status'
+alias gdd='git diff'
+alias glo='git log --graph --pretty="%C(yellow)%h%Creset%C(cyan)%d%Creset %s %C(magenta)<%an>%Creset %C(dim green)(%ci)"'
+alias gl='git log --graph --pretty="%C(yellow)%h%Creset%C(cyan)%d%Creset %s %C(magenta)<%an>%Creset %C(dim green)(%ci)" --first-parent $(getMaster) HEAD'
+alias gll='gl -n 10'
+alias gb='git branch | grep -Ev fork$'
+
+function migrate() {
+  if [ -z $1 ]; then
+    echo "usage: migrate <from-checkout>"
+    return 1
+  fi
+  pushd $(git rev-parse --show-toplevel) &> /dev/null
+  local br=$(git symbolic-ref --short HEAD)
+  if [ "${br}" == "$(getMaster)" ]; then
+    echo "Create a new branch before copying."
+    return 1
+  fi
+  echo "State before migration"
+  gs
+
+  pushd ../$1 &> /dev/null
+  echo -e "\nState for $(git rev-parse --show-toplevel)"
+  gs
+
+  (git diff $(cat $(getFork)) --name-status && \
+  git ls-files --modified --others --exclude-standard | sed 's/^/- 	/') |\
+  awk '{print $2}' | sort -u | tar -zcf /tmp/gcm.tgz -T -
+
+  popd &> /dev/null
+
+  tar -zxf /tmp/gcm.tgz
+
+  echo -e "\nState after migration"
+  gs
+  popd &> /dev/null
+}
+
+function gtz() {
+  (git diff $(cat $(getFork)) --name-status && \
+  git ls-files --modified --others --exclude-standard | sed 's/^/- 	/') |\
+  awk '{print $2}' | sort -u | tar -zcf /tmp/gcm.tgz -T -
+  echo "wrote /tmp/gcm.tgz"
+}
+
+function mrepo() {
+  if [ -z $1 ]; then
+    echo "usage: mrepo <from-branch>"
+    return 1
+  fi
+  local br=$(git symbolic-ref --short HEAD)
+  if [[ "${br}" == "$(getMaster)" ]]; then
+    echo "Create a new branch before copying."
+    return 1
+  fi
+  if [[ $(git branch | grep $1 | wc -l) == 0 ]]; then
+    echo "Branch $@ does not exist"
+    git branch | grep -Ev fork$
+    return 1
+  fi
+  pushd $(git rev-parse --show-toplevel) &> /dev/null
+  gstash
+  git checkout $1
+  local SUBSET=$2
+  if [ -z "${SUBSET}" ]; then SUBSET="."; fi
+  (git diff $(cat $(getFork)) --name-status && \
+  git ls-files --modified --others --exclude-standard | sed 's/^/- 	/') | \grep -E ${SUBSET} |\
+  awk '{print $2}' | sort -u | tar -zcf /tmp/gc.tgz -T -
+
+  git checkout $br
+  gpop
+
+  echo "Migrating files"
+
+  tar -zxf /tmp/gc.tgz
+  popd &> /dev/null
+  gs
+}
+
+function isGithub() {
+  test $(git remote get-url origin | grep github.com | wc -l) == 1
+}
+
+function gmr() {
+  local TITLE=$(git log -n1 --first-parent $(getMaster) HEAD --pretty=%s)
+  if isGithub; then
+    gh pr create --fill -t "${TITLE}" $@
+  else
+    glab mr new --fill -y --remove-source-branch --squash-before-merge -t "${TITLE}" $@
+  fi
+}

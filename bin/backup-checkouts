@@ -1,0 +1,26 @@
+#!/bin/bash
+
+THEN=$(date +%Y%m%d -d "-1 day")
+
+cd "$HOME/src"
+source $HOME/.gitalias
+
+for f in `ls`; do
+  pushd $f 2> /dev/null || continue
+  ORG_BRANCH=$(git symbolic-ref --short HEAD)
+  gc | grep -vE 'main|master|dev|fork' | sed 's/://g' | \grep ^20 | while read d t b; do 
+    if [ "$(echo ${d} | sed 's/-//g')" -gt "${THEN}" ]; then
+      mkdir -p "$HOME/tmp/backups/$f/${d}"
+      git checkout ${b}
+      FILE="$HOME/tmp/backups/$f/${d}/${b}_${t}.tgz"
+      if [ ! -e "${FILE}" ]; then
+          echo "Backing up $f:$b $d_$t > $THEN into ${FILE}"
+          git diff -r $(getMaster) --name-only| grep -v vendor | tar -zcf "${FILE}" -T -
+      fi
+    fi
+  done
+  gc ${ORG_BRANCH}
+  popd
+done
+
+find "${HOME}/tmp/backups" -type f -mtime +30 -delete

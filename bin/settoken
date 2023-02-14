@@ -1,0 +1,12 @@
+#!/bin/bash
+TOKEN="$1"
+if [ -z "${TOKEN}" ]; then
+    TOKEN=$(${HOME}/src/chariot/py/libs/sdk/.venv/bin/python -c "
+import logging
+logging.basicConfig(level=logging.DEBUG)
+from chariot.client import connect
+from chariot.config import get_bearer_token
+print(get_bearer_token())
+" )
+fi
+echo "${TOKEN}" > $HOME/.chariot/token

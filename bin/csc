@@ -1,0 +1,2 @@
+#!/bin/bash
+psql -q "postgresql://postgres:$(cat ${HOME}/.chariot/pg_dev.pwd)@localhost:6432/chariot?application_name=spollack" --csv

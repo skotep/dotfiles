@@ -1,0 +1,9 @@
+#!/bin/bash
+HOST="$1"
+if [ -z "${HOST}" ]; then
+    echo "usage: $0 [dev01]"
+    HOST="dev01"
+fi
+set -e
+$HOME/bin/settoken
+$HOME/bin/curlb https://${HOST}.chariot.striveworks.us/api/identity/v2/users/me/ | jq

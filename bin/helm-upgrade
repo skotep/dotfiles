@@ -1,0 +1,28 @@
+#!/bin/bash
+cd $(git rev-parse --show-toplevel)/deployment
+CHART="$1"
+if [ -z "${CHART}" ]; then
+    if [ $(\ls | wc -l) == 1 ]; then
+      CHART=$(\ls)
+    else
+      echo >&2 "too many charts to pick $(ls)"
+      exit 1
+    fi
+fi
+cd ${CHART}
+pwd
+
+CHARIOT_ECR_REGISTRY="724664234782.dkr.ecr.us-east-1.amazonaws.com/library"
+CI_PROJECT_PATH_SLUG="chariot-$(basename $(git config --get remote.origin.url) | cut -d\. -f 1)"
+CI_BUILD_REF_NAME=$(git rev-parse --abbrev-ref HEAD)
+CI_BUILD_REF=$(git rev-parse HEAD)
+
+set -x
+helm upgrade \
+      --install \
+      --create-namespace \
+      -n chariot \
+      --set image.tag=${CI_BUILD_REF_NAME}_${CI_BUILD_REF} \
+      --set image.repository=${CHARIOT_ECR_REGISTRY}/${CI_PROJECT_PATH_SLUG} \
+      ${CHART} .
+set +x

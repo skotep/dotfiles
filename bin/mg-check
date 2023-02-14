@@ -1,0 +1,17 @@
+#!/bin/bash
+grep -E '^GHA_TOKEN_MG_' ~/src/_mono/secrets.env | tr '=' ' ' | sed 's/"//g' | while read KEY TOKEN; do
+  REQ="$(curl -s \
+             -H "Accept: application/vnd.github+json" \
+             -H "Authorization: token ${TOKEN}" \
+             https://api.github.com/rate_limit)"
+  COUNT="$(echo ${REQ} | jq '.resources.core.remaining')"
+  if [[ "${COUNT}" -lt 1 ]]; then
+    COLOR=31
+  else
+    COLOR=32
+  fi
+  echo -e "\033[1;${COLOR}m${KEY} has ${COUNT} remaining requests for rate limit this hour\033[0m"
+  echo ${REQ} | jq '.resources.core'
+  echo -e "\t$(date -d "@$(echo ${REQ} | jq '.resources.core.reset')")"
+  echo -e "\033[1;${COLOR}m\tin $(( ( $(echo ${REQ} | jq '.resources.core.reset') - $(date +%s) ) / 60 )) minutes\033[0m"
+done

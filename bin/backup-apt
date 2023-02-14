@@ -1,0 +1,4 @@
+#!/bin/bash
+DIR="${HOME}/tmp/backups/apt/$(date +%Y)"
+mkdir -p ${DIR}
+apt list --installed > "${DIR}/$(date +%Y-%m-%d).pkg"

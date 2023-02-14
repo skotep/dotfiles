@@ -1,0 +1,35 @@
+#!/bin/bash
+set -eo pipefail
+TOKEN=$(cat ~/.config/gh/hosts.yml | /usr/local/bin/yq -r '."github.com".oauth_token')
+if [ -z "${TOKEN}" ]; then echo "No token"; exit 1; fi
+
+function query() {
+  REQ="$(curl -s \
+               -H "Accept: application/vnd.github+json" \
+               -H "Authorization: token ${TOKEN}" \
+               https://api.github.com/rate_limit | jq '.resources.core')"
+  NOW=$(date +%s)
+
+  AT=$(echo $REQ | jq -r '.reset')
+  USED=$(echo $REQ | jq -r '.used')
+  REM=$(echo $REQ | jq -r '.remaining')
+
+  OFFSET=30
+  FOR=$(( AT - NOW - OFFSET ))
+  echo "$(date -d @$NOW +%Y-%m-%dT%H:%M:%S),${USED},${REM},${FOR},${AT},$(date -d @$AT +%Y-%m-%dT%H:%M:%S)" | tee -a ~/tmp/gitpat.log
+
+  if [[ "${FOR}" -le 0 ]]; then
+    FOR=${OFFSET}
+  fi
+  echo "sleep ${FOR}"
+  sleep ${FOR}
+}
+
+TODAY=$(date +%Y%m%d)
+while true; do
+  query
+  if [[ $(date +%Y%m%d) != ${TODAY} ]]; then
+    echo "all done for ${TODAY} it is now $(date +%Y%m%d)"
+    break
+  fi
+done

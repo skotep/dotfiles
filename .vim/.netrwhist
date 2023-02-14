@@ -1,0 +1,12 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =3
+let g:netrw_dirhist_3='/home/s.pollack/src/chariot3/.github/actions/poetry-setup'
+let g:netrw_dirhist_2='/home/s.pollack/src/chariot/js/libs/nx-plugin/src/executors/oci-build'
+let g:netrw_dirhist_1='/home/s.pollack/src/chariot/js/libs/nx-plugin'
+let g:netrw_dirhist_0='/home/s.pollack/src/chariot/js/libs/nx-plugin/src'
+let g:netrw_dirhist_9='/home/s.pollack/src/chariot/js/libs/nx-plugin/src/executors/go-build'
+let g:netrw_dirhist_8='/home/s.pollack/src/chariot/js/libs/nx-plugin/src/executors'
+let g:netrw_dirhist_7='/home/s.pollack/src/chariot/js/libs/nx-plugin/src/executors/go-build'
+let g:netrw_dirhist_6='/home/s.pollack/src/chariot/tools/nx/plugins'
+let g:netrw_dirhist_5='/home/s.pollack/src/chariot/go/apps/models-catalog/pkg/adapter/kserve'
+let g:netrw_dirhist_4='/home/s.pollack/src/chariot2/go/apps/training-config'

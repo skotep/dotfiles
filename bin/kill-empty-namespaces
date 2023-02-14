@@ -1,0 +1,30 @@
+#!/bin/bash
+ii=0
+MAX_DAYS="$1"
+if [ -z "${MAX_DAYS}" ]; then MAX_DAYS=8; fi
+kubectl get namespaces | grep project- | while read name active duration; do
+    if [[ $(echo ${duration} | cut -dd -f1) -lt ${MAX_DAYS} ]]; then
+        echo "keep $name $duration"
+        continue
+    fi
+    COUNT=$(kubectl -n ${name} get all 2>&1 | grep -v 'No resources' | wc -l)
+    if [[ "${COUNT}" > 0 ]]; then
+        echo "keep $name $duration with ${COUNT} resources"
+        continue
+    fi
+    COUNT=$(kubectl -n ${name} get pvc 2>&1 | grep -v 'No resources' | wc -l)
+    if [[ "${COUNT}" > 0 ]]; then
+        echo "keep $name $duration with ${COUNT} volumes"
+        continue
+    fi
+    echo "deleting $name $duration"
+    kubectl delete namespace "${name}" &
+    ii=$((ii+1))
+    if [[ $(expr ${ii} % 10) == 0 ]]; then
+      echo "waiting for completion..."
+      wait
+    fi
+done
+echo "final wait..."
+sleep 5
+wait

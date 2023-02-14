@@ -1,0 +1,1 @@
+psql -q $@ "postgresql://postgres:1337pa55w0rd@localhost:5432/chariot"

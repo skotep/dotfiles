@@ -1,0 +1,10 @@
+#!/bin/bash
+URL="$1"
+if [[ "${URL}" != "http"* ]] && [[ "${URL}" != "localhost"* ]]; then
+  URL="https://dev01.chariot.striveworks.us/api/$1"
+fi
+shift
+exec curl -s \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json+hal" \
+    -H "Authorization: Bearer $(cat $HOME/.chariot/token)" "${URL}" $@

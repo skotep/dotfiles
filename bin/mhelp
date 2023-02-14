@@ -1,0 +1,19 @@
+.PHONY:
+.DEFAULT_GOAL := help
+
+SHELL := /bin/bash
+
+define PRINT_HELP_PYSCRIPT
+import re
+import sys
+for line in sys.stdin:
+    m = re.match(r'^([1-9a-zA-Z_-]+):[.* #]*(.*)', line)
+    if m:
+        target, help = m.groups()
+        print('%-40s %s' % (target, help))
+endef
+export PRINT_HELP_PYSCRIPT
+
+help: ## display this help message
+	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
+

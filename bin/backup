@@ -1,0 +1,9 @@
+#!/bin/bash
+
+DEST="${HOME}/tmp/backups/dotfiles/$(date +%Y)/dotfiles-$(date +%Y-%m-%d).tgz"
+mkdir -p $(dirname ${DEST})
+cd ${HOME}
+tar -zcf ${DEST} bin .alias .bash* .chariot .git* .kuberc .mc \
+    .nvmrc .psqlrc .skaffold .ssh .vimrc .vim .wslconfig .zshrc \
+    pygments_vim.py
+

@@ -1,0 +1,11 @@
+#!/bin/bash
+. $HOME/.alias
+ENV_DATABASE_PASSWORD=$(get_pgpwd)
+CMD="kubectl port-forward -n chariot svc/postgresql 6432:5432"
+if [ $(ps -ef | grep "${CMD}" | grep -v grep | wc -l) -eq 0 ]; then
+   echo "Setting up port forward: ${CMD}"
+   ${CMD} &
+   disown
+   sleep 5
+fi
+psql -q $@ "postgresql://postgres:${ENV_DATABASE_PASSWORD}@localhost:6432/chariot?application_name=spollack"

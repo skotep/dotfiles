@@ -1,93 +1,163 @@
-alias sa='source $HOME/.alias'
-if [ "$(uname)" == "Darwin" ]; then
-  alias ls='ls -GF'
-else
-  alias ls='ls -F --color=always'
-fi
-alias j='jobs -l'
-alias less='less -R'
-alias h='history'
-alias df='df -h'
-alias du='du -h'
-alias ij='/opt/intellij-ue-stable/bin/idea.sh'
-alias work='ssh skotep.svl.corp.google.com'
-alias grep='/bin/grep --color=always'
+export EDITOR="vim"
+alias sa="source $HOME/.alias"
+alias v="view"
+alias df="df -h"
+alias open='explorer.exe'
+alias ccat='pygmentize -g -O style=vim'
+alias transpose="csvtool transpose -"
+alias col="sed 's/,/╥/' | column -s╥ -t"
+
 alias grpe='grep'
-alias v='view'
-alias diffys='diff --side-by-side -W 250'
+alias Grep='grep'
+alias cusl='curl -s'
+alias Jq='jq'
 
-
-function gc() {
-	d=$1
-	if [ -z "$d" ]; then
-		d=$(pwd | sed 's|/google3.*||' | sed 's|.*/||')
-	fi
-	cd /google/src/cloud/skotep/${d}/google3/platforms/capacity/intent/catan
-}
-alias bt1="blaze test --test_output=all --test_sharding_strategy=disabled --test_env TEST_TOTAL_SHARDS=1 --test_env TEST_SHARD_INDEX=1"
-
-alias p='g4 p'
-alias m='g4 myclients'
-alias pr="g4 p -s relativepath | \grep -v '^Default|^Local|Change' | \grep '[a-z]' | awk '{print \$1}'"
-alias prr="g4 p -s relativepath | \grep -v '^Default|^Local|Change' | \grep '[a-z]' | awk '{print \$1}' | \grep -v '^\.\.'"
-alias ppr='prr'
-alias gm="g4 myclients | tr ':' ' ' | cut -d\   -f 3,6 | column -t | sort -k 2"
-
-function gmp() {
-	g4 myclients | tr ':' ' ' | cut -d\   -f 3 | column -t | sort -k 2 |\
-	while read g d; do
-		g4d $g
-		echo "#############################################################"; echo $g; echo "";
-		g4 p
-	done
+function home() {
+  #PIIP=$(curl 'https://api.ipify.me' | awk '{print $1}')
+  PIIP="47.234.133.113"
+  ssh -p 3122 skotep@${PIIP}
 }
 
-alias tad="tmux a -d || tmux new -s work"
-alias taze='/usr/bin/taze -root -recursive'
+alias dokku='docker exec -it dokku dokku'
+
+function ffind() {
+  local DIR=$1; shift
+  find ${DIR} -type f $@
+}
+alias sls="login_to_aws_resources && aws ecr get-login-password --region us-east-1 | helm registry login --username AWS --password-stdin 724664234782.dkr.ecr.us-east-1.amazonaws.com"
+alias lca="rm ${HOME}/.aws/cli/cache/*.json; aws s3 ls && login_to_codeartifact"
+
+alias diffys='diff -t --side-by-side --suppress-common-lines'
+
+function lower() {
+    echo $@ | tr '[:upper:]' '[:lower:]'
+}
+
+function check_vpn() {
+  if [ -n "$(\ipconfig.exe | grep '10\.')" ]; then
+    return 0
+  else
+    return 1
+  fi
+}   
+
+export GOBIN="/usr/local/go/bin"
+export GOPRIVATE="*.striveworks.us"
+
+alias sync_clock="sudo hwclock -s"
+
+alias k="kubectl"
+#alias kc="kubectl config use-context chariot"
+#alias kdev="kubectl config use-context s.pollack-dev.k8s.striveworks.us"
+#alias kprod="kubectl config use-context s.pollack-kubernetes.striveworks.us"
+#alias kadmin="kubectl config use-context kubernetes.striveworks.us"
+#alias kprem="kubectl config use-context s.pollack-on-prem"
+#alias klocal="kubectl config use-context kind-knative"
+
+function kj() {
+  kubectl exec -it $1 -- sh
+}
+
+alias dprod="docker login core.harbor.kubernetes.striveworks.us"
+
+alias aws='/usr/local/bin/aws'
+
+function lsp() {
+  lsof -n -i4TCP:$1
+}
+function killport() {
+    local PORT=$(lsof -n -i4TCP:$1 | grep LISTEN | awk '{print $2}')
+    kill -9 ${PORT}
+}
+
+function ffind() {
+  local DIR=$1; shift
+  find ${DIR} -type f $@
+}
 
 function vf() {
-	src=$2
-	if [ -z "${src}" ]; then src="."; fi
-    FILES=($(find "${src}" | \grep $1))
-    if [ "${#FILES[@]}" == 1 ]; then
-        vi ${FILES[0]}
-    else
-        select FILENAME in ${FILES[@]}; do vi $FILENAME; break; done;
+  src=$2
+  if [ -z "${src}" ]; then src="."; fi
+  FILES=($(find "${src}" | \grep $1))
+  if [ "${#FILES[@]}" == 1 ]; then
+    echo "${FILES[0]}"
+    vi "${FILES[0]}"
+  else
+    select FILENAME in ${FILES[@]}; do
+      echo "${FILENAME}"
+      vi "${FILENAME}"
+      break
+    done
+  fi
+}
+
+function ip() {
+  curl -s https://api.ipify.org
+}
+
+alias npip="pip install -U --trusted-host artifact.striveworks.us -i https://artifact.striveworks.us:8443/repository/pypi-group/simple"
+
+    
+source $HOME/.gitalias 
+
+function fmt() {
+    git status -s | \grep '\.go' | while read m file; do
+        echo "formatting ${file} in place..."; gofmt -w "${file}"
+    done
+}
+
+function get_pgpwd() {
+    local PWDFILE="${HOME}/.chariot/pg_dev.pwd"
+    if $(check_vpn); then
+        if [ -n "$1" ] || [ $((($(date +%s) - $(date +%s -r "${PWDFILE}")) / 86400)) -ge 1 ]; then
+            echo "fetching password..."
+            kubectl get secret --namespace chariot postgresql \
+                -o jsonpath="{.data.postgresql-password}" |\
+                 base64 --decode > ${PWDFILE}
+        fi
     fi
+    export ENV_DATABASE_PASSWORD=$(cat ${PWDFILE})
+    echo "${ENV_DATABASE_PASSWORD}"
 }
 
-function gig() {
-	if [ "$1" == "" ]; then
-		filelist=$(g4 p -s relativepath | \grep \.go | awk '{print $1}')
-		n=$(g4 p -s relativepath | \grep \.go | wc -l)
-		if [ "$n" -gt 0 ]; then
-			for file in $filelist; do
-				echo "goimports $file"
-				goimports -w $file
-			done
-			for filedir in $(echo $filelist | xargs dirname | sort -u); do
-				echo "glaze $filedir"
-				glaze $filedir
-			done
-		fi
-	else
-		goimports -w $1
-		glaze $(dirname $1)
-	fi
+export CHARIOT_ECR_REGISTRY="724664234782.dkr.ecr.us-east-1.amazonaws.com/library"
+export CHARIOT_ECR_REPOSITORY="${CHARIOT_ECR_REGISTRY}"
+export CHARIOT_ECR_REGION="us-east-1"
+export ENV_DATABASE_PASSWORD="$(get_pgpwd)"
+export s3teddy="s3://striveworks-role-developer-teddy-artifacts"
+
+alias aca="aws codeartifact login --tool pip --repository striveworks --domain striveworks --domain-owner 724664234782 --region us-east-1"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;36m'
+NC='\033[0m'
+
+export PYTHONDONTWRITEBYTECODE=1
+
+#export ROME="2FTGPqQoqtHpMdIU7sJEyvwLXyR"
+export ROME="2H3cWdtk4hbFGZmG7SObwIiQTR4"
+export GLOBAL="2H3PvXkm8pycgDwYzj7zz8hukK3"
+
+source $HOME/.kuberc
+
+alias dils="docker images --format '{{.Size}}\t{{.ID}} {{.Repository}}:{{.Tag}}' | sort -k 3"
+alias pils="podman images --format '{{.Size}}\t{{.ID}} {{.Repository}}:{{.Tag}}' | sort -k 3"
+
+alias cpy="/home/s.pollack/src/chariot/py/libs/sdk/.venv/bin/python"
+alias chariot="/home/s.pollack/src/chariot/py/libs/sdk/.venv/bin/chariot"
+alias bfg="java -jar /home/s.pollack/tmp/bfg-1.14.0.jar"
+
+#export CGO_ENABLED=0
+
+function ecr(){
+  aws ecr describe-images --repository-name library/chariot-$1 --filter tagStatus=TAGGED \
+    --query 'sort_by(imageDetails,& imagePushedAt)' | jq -r '.[] | [.imagePushedAt,.imageTags[]] | @csv' |\
+    col
 }
 
-
-function rr() {
-	g4 p -s relativepath | \grep -v '^Default|^Local|^Change' | \grep '[a-z]' | awk '{print $1}' |\
-	while read file; do
-		lc=$(g4 diff $file | wc -l)
-		echo $file $lc
-		if [ ${lc} == 1 ]; then
-			g4 revert $file
-		fi
-	done
-}
-
-function ess() {
-	gimp "$(\ls -rt $HOME/Pictures/Screenshot* | tail -n 1)"
+function ecrc(){
+  aws ecr describe-images --repository-name library-charts/$1 --filter tagStatus=TAGGED \
+    --query 'sort_by(imageDetails,& imagePushedAt)' | jq -r '.[] | [.imagePushedAt,.imageTags[]] | @csv' |\
+    col
 }

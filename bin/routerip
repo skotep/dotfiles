@@ -1,0 +1,2 @@
+#!/bin/bash
+curl --connect-timeout 15 -s "https://api.ipify.org

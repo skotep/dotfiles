@@ -1,0 +1,14 @@
+#!/bin/bash
+PWDFILE="${HOME}/.chariot/pg_dev.pwd"
+if [ -z "${ENV_DATABASE_PASSWORD}" ]; then
+    if [ $(check_vpn()) == 1 ]; then
+        if [ $((($(date +%s) - $(date +%s -r "${PWDFILE}")) / 86400)) -ge 1 ]; then
+            echo "fetching password..."
+            kubectl get secret --namespace chariot postgresql \
+                -o jsonpath="{.data.postgresql-password}" |\
+                 base64 --decode > ${PWDFILE}
+        fi
+    fi
+    export ENV_DATABASE_PASSWORD=$(cat ${PWDFILE})
+    echo "${ENV_DATABASE_PASSWORD}"
+fi

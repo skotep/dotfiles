@@ -1,0 +1,12 @@
+#!/bin/bash
+#PROJECT_ID="2CxUSmJFnxLc1lQ1GtHMwPnrzXT"
+URL="$1"
+if [[ "${URL}" != "http"* ]]; then
+  URL="localhost:4000/api$1" #/catalog/v1/projects/$1"
+fi
+shift
+curl -s \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json+hal" \
+    -H "Authorization: Bearer $(cat $HOME/.chariot/token)" ${URL} $@
+#${PROJECT_ID}/$@
